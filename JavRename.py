@@ -173,22 +173,21 @@ class JavBusScraper:
 # 檔案和處理邏輯
 # =============================
 def collect_files(root_folder: str) -> list:
-    """收集所有需要處理的檔案"""
+    """收集所有需要處理的檔案，包括所有子資料夾"""
     file_list = []
     
-    # 遍歷根目錄及其所有子目錄
+    # 使用 os.walk 徹底遍歷根目錄下的所有層級
     for dirpath, dirnames, filenames in os.walk(root_folder):
-        # 排除已是 '女優名' 的資料夾 (避免重複處理已分類的檔案)
-        if dirpath != root_folder and os.path.basename(dirpath) in [os.path.basename(d) for d in os.listdir(root_folder) if os.path.isdir(os.path.join(root_folder, d))]:
-            continue
-
+        # 檢查當前目錄中的每一個檔案
         for filename in filenames:
             _, ext = os.path.splitext(filename)
+            # 檢查副檔名是否符合設定
             if ext.lower() in valid_extensions:
+                # 儲存 (檔案所在絕對路徑, 檔名, 使用者選定的根目錄)
                 file_list.append((dirpath, filename, root_folder))
-                logger.debug(f"找到影片檔案: {filename} in {dirpath}") # 使用 debug 級別避免日誌過多
+                logger.info(f"找到影片檔案: {filename} (位於: {os.path.relpath(dirpath, root_folder)})")
     
-    logger.info(f"總共找到 {len(file_list)} 個需要處理的影片檔案")
+    logger.info(f"搜尋完畢，總共找到 {len(file_list)} 個需要處理的影片檔案")
     return file_list
 
 async def process_files(root_folder: str):
